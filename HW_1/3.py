@@ -5,7 +5,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import CountVectorizer
 
-# 1. Downloads (Ensuring resources exist)
+# 1. Downloads
 try:
     nltk.data.find('corpora/movie_reviews')
 except LookupError:
@@ -55,7 +55,7 @@ y_labels = [category for doc, category in documents]
 
 # 4. Vectorization (Bag of Words)
 # This converts text to a matrix of token counts
-vectorizer = CountVectorizer(max_features=2000)
+vectorizer = CountVectorizer()
 X_vectorized = vectorizer.fit_transform(X_text)
 
 print("-" * 30)
