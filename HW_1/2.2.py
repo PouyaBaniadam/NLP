@@ -1,4 +1,5 @@
 class NaiveBayesClassifier:
+
     def __init__(self):
         self.priors = {}
         self.conditionals = {}
@@ -14,16 +15,13 @@ class NaiveBayesClassifier:
         return sorted(list(vocab_set))
 
     @staticmethod
-    def _calculate_priors(data):
-        """
-        Internal method to calculate Prior probabilities: P(c) and P(j).
-        """
-        total_docs = len(data)
+    def _calculate_priors(train_data):
+        total_docs = len(train_data)
         c_count = 0
         j_count = 0
 
-        for doc in data:
-            match doc[1]:
+        for doc, category in train_data:
+            match category:
                 case 'c':
                     c_count += 1
                 case 'j':
@@ -31,31 +29,27 @@ class NaiveBayesClassifier:
 
         return {
             'c': c_count / total_docs,
-            'j': j_count / total_docs
+            'j': j_count / total_docs,
         }
 
-    def _calculate_conditionals(self, data):
-        """
-        Internal method to calculate Conditional probabilities (Likelihoods): P(w|c).
-        Using Laplace Smoothing (Add-1).
-        """
-
+    # Task: Calculate conditional probabilities, P(word|class), using Laplace Smoothing.
+    def _calculate_conditionals(self, training_data):
         c_list = []
         j_list = []
-        for doc in data:
-            match doc[1]:
+        for doc, category in training_data:
+            match category:
                 case 'c':
-                    c_list.extend(doc[0])
+                    c_list.extend(doc)
                 case 'j':
-                    j_list.extend(doc[0])
+                    j_list.extend(doc)
 
-        # Calculate denominators (Total words in class + Vocabulary size)
-        denom_c = len(c_list) + len(self.vocabulary)
-        denom_j = len(j_list) + len(self.vocabulary)
+        # Calculate the denominator for the Laplace Smoothing formula.
+        # Denominator = (Total number of words in the class) + (Size of the vocabulary)
+        denom_c = len(c_list) + len(self.vocabulary)  # For class 'c': 8 + 6 = 14
+        denom_j = len(j_list) + len(self.vocabulary)  # For class 'j': 3 + 6 = 9
 
         conditionals = {'c': {}, 'j': {}}
 
-        # Calculate probability for each word in the extracted vocabulary
         for word in self.vocabulary:
             conditionals['c'][word] = (c_list.count(word) + 1) / denom_c
             conditionals['j'][word] = (j_list.count(word) + 1) / denom_j
@@ -63,28 +57,17 @@ class NaiveBayesClassifier:
         return conditionals
 
     def train(self, training_data):
-        """
-        Main training method:
-        1. Automatically extracts vocabulary from data.
-        2. Calculate Priors and Conditionals.
-        """
-
         self.vocabulary = self.get_vocabulary(training_data)
-
         self.priors = self._calculate_priors(training_data)
         self.conditionals = self._calculate_conditionals(training_data)
 
-    def predict(self, doc):
-        """
-        Prediction method: Takes a new document list and returns the predicted class.
-        """
-        score_c = self.priors['c']
-        score_j = self.priors['j']
+    def predict(self, to_be_predicted_doc):
+        score_c = self.priors['c']  # Starts at 0.75
+        score_j = self.priors['j']  # Starts at 0.25
 
-        for word in doc:
-            if word in self.conditionals['c']:
-                score_c *= self.conditionals['c'][word]
-                score_j *= self.conditionals['j'][word]
+        for word in to_be_predicted_doc:
+            score_c *= self.conditionals['c'][word]
+            score_j *= self.conditionals['j'][word]
 
         winner = 'c' if score_c > score_j else 'j'
 
@@ -94,18 +77,22 @@ class NaiveBayesClassifier:
             'score_j': score_j
         }
 
+
 training_data = [
     (['Chinese', 'Beijing', 'Chinese'], 'c'),
     (['Chinese', 'Chinese', 'Shanghai'], 'c'),
     (['Chinese', 'Macao'], 'c'),
     (['Tokyo', 'Japan', 'Chinese'], 'j'),
 ]
-test_doc = ['Chinese', 'Tokyo', 'Shanghai']
+
+to_be_predicted_doc = ['Chinese', 'Tokyo', 'Shanghai']
+
 
 model = NaiveBayesClassifier()
 
 model.train(training_data)
-result = model.predict(test_doc)
+
+result = model.predict(to_be_predicted_doc)
 
 print("\n📊 Prediction Result:")
 print(f"   Score Class 'c': {result['score_c']}")
