@@ -1,16 +1,16 @@
-import os
 import re
 import string
+
+import gensim.downloader as api
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import gensim.downloader as api
+import seaborn as sns
 from gensim.models import Word2Vec
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from tabulate import tabulate
 
 DATASET_PATH = "AG_News_Subset.csv"
@@ -67,13 +67,12 @@ clf_w2v.fit(X_train_w2v, y_train)
 y_pred_w2v = clf_w2v.predict(X_test_w2v)
 report_w2v = classification_report(y_test, y_pred_w2v, output_dict=True)
 results.append({
-    "Method": "Your Word2Vec", "Accuracy": report_w2v['accuracy'],
+    "Method": "Word2Vec", "Accuracy": report_w2v['accuracy'],
     "Precision": report_w2v['macro avg']['precision'], "Recall": report_w2v['macro avg']['recall'],
     "Macro-F1": report_w2v['macro avg']['f1-score'],
 })
 
 # GloVe
-print("Loading GloVe model")
 glove_model = api.load(GLOVE_MODEL_NAME)
 X_train_glove = np.array([get_document_vector(tokens, glove_model) for tokens in X_train])
 X_test_glove = np.array([get_document_vector(tokens, glove_model) for tokens in X_test])
