@@ -9,7 +9,6 @@ dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
 
 def preprocess_hf_data(hf_dataset):
     cleaned_sentences = []
-    print("Start preprocessing...")
 
     for item in hf_dataset:
         text = item['text']
@@ -73,5 +72,6 @@ for arch_name in architectures:
 
             duration = time.time() - loop_start
             print(f"[Done in {duration:.1f}s]")
+total_end = time.time()
 
-print(f"\nAll 12 models trained and saved in 'models/' folder!")
+print(f"\nAll 12 models trained in {int(total_end - total_start)} seconds and were saved in 'models/' folder!")

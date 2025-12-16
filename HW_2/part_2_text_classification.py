@@ -36,7 +36,7 @@ df['tokens'] = df['text'].apply(preprocess_text)
 df['label_id'] = df['Class Index'] - 1
 label_names = ['World', 'Sports', 'Business', 'Sci/Tech']
 
-X_train, X_test, y_train, y_test = train_test_split(
+X_train, X_test, Y_train, Y_test = train_test_split(
     df['tokens'], df['label_id'], test_size=0.2, random_state=42, stratify=df['label_id']
 )
 
@@ -49,12 +49,13 @@ vectorizer = TfidfVectorizer(max_features=10000)
 X_train_tfidf = vectorizer.fit_transform(X_train_text)
 X_test_tfidf = vectorizer.transform(X_test_text)
 clf_tfidf = LogisticRegression(max_iter=1000)
-clf_tfidf.fit(X_train_tfidf, y_train)
+clf_tfidf.fit(X_train_tfidf, Y_train)
 y_pred_tfidf = clf_tfidf.predict(X_test_tfidf)
-report_tfidf = classification_report(y_test, y_pred_tfidf, output_dict=True)
+report_tfidf = classification_report(Y_test, y_pred_tfidf, output_dict=True)
 results.append({
     "Method": "TF-IDF (Baseline)", "Accuracy": report_tfidf['accuracy'],
-    "Precision": report_tfidf['macro avg']['precision'], "Recall": report_tfidf['macro avg']['recall'],
+    "Precision": report_tfidf['macro avg']['precision'],
+    "Recall": report_tfidf['macro avg']['recall'],
     "Macro-F1": report_tfidf['macro avg']['f1-score'],
 })
 
@@ -63,12 +64,13 @@ w2v_model = Word2Vec.load(BEST_MODEL_PATH).wv
 X_train_w2v = np.array([get_document_vector(tokens, w2v_model) for tokens in X_train])
 X_test_w2v = np.array([get_document_vector(tokens, w2v_model) for tokens in X_test])
 clf_w2v = LogisticRegression(max_iter=1000)
-clf_w2v.fit(X_train_w2v, y_train)
+clf_w2v.fit(X_train_w2v, Y_train)
 y_pred_w2v = clf_w2v.predict(X_test_w2v)
-report_w2v = classification_report(y_test, y_pred_w2v, output_dict=True)
+report_w2v = classification_report(Y_test, y_pred_w2v, output_dict=True)
 results.append({
     "Method": "Word2Vec", "Accuracy": report_w2v['accuracy'],
-    "Precision": report_w2v['macro avg']['precision'], "Recall": report_w2v['macro avg']['recall'],
+    "Precision": report_w2v['macro avg']['precision'],
+    "Recall": report_w2v['macro avg']['recall'],
     "Macro-F1": report_w2v['macro avg']['f1-score'],
 })
 
@@ -77,9 +79,9 @@ glove_model = api.load(GLOVE_MODEL_NAME)
 X_train_glove = np.array([get_document_vector(tokens, glove_model) for tokens in X_train])
 X_test_glove = np.array([get_document_vector(tokens, glove_model) for tokens in X_test])
 clf_glove = LogisticRegression(max_iter=1000)
-clf_glove.fit(X_train_glove, y_train)
+clf_glove.fit(X_train_glove, Y_train)
 y_pred_glove = clf_glove.predict(X_test_glove)
-report_glove = classification_report(y_test, y_pred_glove, output_dict=True)
+report_glove = classification_report(Y_test, y_pred_glove, output_dict=True)
 results.append({
     "Method": "Pre-trained GloVe", "Accuracy": report_glove['accuracy'],
     "Precision": report_glove['macro avg']['precision'], "Recall": report_glove['macro avg']['recall'],
@@ -95,7 +97,7 @@ print(" " * 17 + "Classification Model Comparison Results")
 print("=" * 72)
 print(tabulate(df_results, headers='keys', tablefmt='grid', showindex=False))
 
-cm = confusion_matrix(y_test, y_pred_tfidf)
+cm = confusion_matrix(Y_test, y_pred_tfidf)
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=label_names, yticklabels=label_names)
 plt.title('Confusion Matrix - TF-IDF Model')

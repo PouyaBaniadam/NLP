@@ -19,8 +19,15 @@ BATS_CATEGORIES = [
 ]
 
 BATS_CATEGORY_NAMES = ["BATS_Inflec", "BATS_Deriv", "BATS_Encycl", "BATS_Lexic"]
+# [
+# bats : Grammer /
+# Derivation : prefix | suffix /
+# Encycl : center of country
+# / Lexic : Synonym
+# ]
 
 def prepare_bats_for_gensim(original_bats_path):
+    """gensim needs 4 but bats have 2! we should fix them :)"""
     with open(original_bats_path, 'r', encoding='utf-8') as f:
         pairs = [line.strip().split() for line in f if line.strip()]
 
@@ -60,7 +67,7 @@ def run_qualitative_analysis(results_df):
     worst_wv = Word2Vec.load(worst_model_path).wv
 
     target_words = ["bank", "apple", "run"]
-    print("\n[Part A] Polysemous Words Analysis (Top 5 Neighbors)")
+    print("\n[Part A] (Top 5 Neighbors)")
 
     for word in target_words:
         print(f"\nTarget Word: '{word}'")
@@ -109,24 +116,12 @@ for model_path in sorted(model_paths):
         search_pattern = os.path.join(BATS_DIR, "*", glob.escape(category_file))
         matching_files = glob.glob(search_pattern)
 
-        if not matching_files:
-            bats_scores[BATS_CATEGORY_NAMES[i]] = 0.0
-            continue
-
         original_path = matching_files[0]
         formatted_analogy_path = prepare_bats_for_gensim(original_path)
 
         score = wv.evaluate_word_analogies(formatted_analogy_path)
-        accuracy = 0.0
-        if isinstance(score, tuple):
-            accuracy = score[0]
-        elif isinstance(score, dict) and 'sections' in score and score['sections']:
-            section_result = score['sections'][0]
-            num_correct = len(section_result.get('correct', []))
-            num_incorrect = len(section_result.get('incorrect', []))
-            total = num_correct + num_incorrect
-            if total > 0:
-                accuracy = num_correct / total
+        accuracy = score[0]
+
         bats_scores[BATS_CATEGORY_NAMES[i]] = accuracy * 100
 
         os.remove(formatted_analogy_path)
@@ -147,6 +142,7 @@ print("\n" + "=" * 104)
 print(" " * 40 + "PARAMETER SEARCH RESULTS")
 print("=" * 104)
 
+print(df.columns)
 for col in df.columns:
     if df[col].dtype == 'float64':
         df[col] = df[col].round(2)
